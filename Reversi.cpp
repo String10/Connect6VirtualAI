@@ -390,7 +390,7 @@ pair<pair<int, int>, pair<int, int>> Reversi::step()
 	for (int i = 0; i < chessboard::BOARD_HEIGHT; i++) {
 		for (int j = 0; j < chessboard::BOARD_WIDTH; j++) {
 			if (board.GetColor(i, j) == (!ownColor) + 1) {
-				for (int k = 0; k < 4; k++) {
+				for (int k = 0; k < 8; k++) {
 					for (int u = i + to[k][0], v = j + to[k][1];
 						u < chessboard::BOARD_HEIGHT && v < chessboard::BOARD_WIDTH;
 						u += to[k][0], v += to[k][1]) {
