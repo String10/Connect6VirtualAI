@@ -315,7 +315,7 @@ pair<pair<int, int>, pair<int, int>> Reversi::step()
 
 	for (int i = rmid - 1; i < chessboard::BOARD_HEIGHT; i++) {
 		for (int j = cmid -1; j < chessboard::BOARD_WIDTH; j++) {
-			if (!board.GetColor(i, j)) {
+			if (board.GetColor(i, j) == 0) {
 				if (r1 == -1) {
 					r1 = i, c1 = j;
 				}
@@ -351,32 +351,32 @@ pair<pair<int, int>, pair<int, int>> Reversi::step()
 							break;
 						}
 						if (abs(u - i + 1) == 4 || abs(v - j + 1) == 4) {
-							if (board.CheckInside(i - to[k][0], j - to[k][1]) && !board.GetColor(i - to[k][0], j - to[k][1])
-								&& board.CheckInside(u + to[k][0], v + to[k][1]) && !board.GetColor(u + to[k][0], v + to[k][1])) {
+							if (board.GetColor(i - to[k][0], j - to[k][1]) == 0
+								&& board.GetColor(u + to[k][0], v + to[k][1]) == 0) {
 								r1 = i - to[k][0], c1 = j - to[k][1];
 								r2 = u + to[k][0], c2 = v + to[k][1];
 								return make_ans();
 							}
-							if (board.CheckInside(u + to[k][0], v + to[k][1]) && !board.GetColor(u + to[k][0], v + to[k][1])
-								&& board.CheckInside(u + to[k][0] * 2, v + to[k][1] * 2) && !board.GetColor(u + to[k][0] * 2, v + to[k][1] * 2)) {
+							if (board.GetColor(u + to[k][0], v + to[k][1]) == 0
+								&& board.GetColor(u + to[k][0] * 2, v + to[k][1] * 2) == 0) {
 								r1 = u + to[k][0], c1 = v + to[k][1];
 								r2 = u + to[k][0] * 2, c2 = v + to[k][1] * 2;
 								return make_ans();
 							}
 						}
 						else if (abs(u - i + 1) == 5 || abs(v - j + 1) == 5) {
-							if (board.CheckInside(i - to[k][0], j - to[k][1]) && !board.GetColor(i - to[k][0], j - to[k][1])) {
+							if (board.GetColor(i - to[k][0], j - to[k][1]) == 0) {
 								r1 = i - to[k][0], c1 = j - to[k][1];
 								return make_ans();
 							}
-							if (board.CheckInside(u + to[k][0], v + to[k][1]) && !board.GetColor(u + to[k][0], v + to[k][1])) {
+							if (board.GetColor(u + to[k][0], v + to[k][1]) == 0) {
 								r1 = u + to[k][0], c1 = v + to[k][1];
 								return make_ans();
 							}
 						}
 						else {
-							if (board.CheckInside(u + to[k][0], v + to[k][1]) && !board.GetColor(u + to[k][0], v + to[k][1])
-								&& board.CheckInside(u + to[k][0] * 2, v + to[k][1] * 2) && !board.GetColor(u + to[k][0] * 2, v + to[k][1] * 2)) {
+							if (board.GetColor(u + to[k][0], v + to[k][1]) == 0
+								&& board.GetColor(u + to[k][0] * 2, v + to[k][1] * 2) == 0) {
 								r1 = u + to[k][0], c1 = v + to[k][1];
 								r2 = u + to[k][0] * 2, c2 = v + to[k][1] * 2;
 							}
@@ -398,16 +398,16 @@ pair<pair<int, int>, pair<int, int>> Reversi::step()
 							break;
 						}
 						if (abs(u - i + 1) == 4 || abs(v - j + 1) == 4) {
-							if (board.CheckInside(i - to[k][0], j - to[k][1]) && !board.GetColor(i - to[k][0], j - to[k][1])
-								&& board.CheckInside(u + to[k][0], v + to[k][1]) && !board.GetColor(u + to[k][0], v + to[k][1])) {
+							if (board.GetColor(i - to[k][0], j - to[k][1]) == 0
+								&& board.GetColor(u + to[k][0], v + to[k][1]) == 0) {
 								r1 = i - to[k][0], c1 = j - to[k][1];
 								r2 = u + to[k][0], c2 = v + to[k][1];
 								return make_ans();
 							}
 						}
 						if (abs(u - i + 1) == 5 || abs(v - j + 1) == 5) {
-							if (board.CheckInside(i - to[k][0], j - to[k][1]) && !board.GetColor(i - to[k][0], j - to[k][1])
-								&& board.CheckInside(u + to[k][0], v + to[k][1]) && !board.GetColor(u + to[k][0], v + to[k][1])) {
+							if (board.GetColor(i - to[k][0], j - to[k][1]) == 0
+								&& board.GetColor(u + to[k][0], v + to[k][1]) == 0) {
 								r1 = i - to[k][0], c1 = j - to[k][1];
 								r2 = u + to[k][0], c2 = v + to[k][1];
 								return make_ans();
