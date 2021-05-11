@@ -25,7 +25,23 @@ bool ChessBoard::TakeMove(int x, int y, int color) {
 	}
 	return false;
 }
+bool chessboard::ChessBoard::TakeMove(std::pair<int, int> pos, int color) {
+	int x = pos.first, y = pos.second;
+	if (CheckInside(x, y) && GetColor(x, y) == 0) {
+		chessBoard[x][y] = color;
+		return true;
+	}
+	return false;
+}
 bool chessboard::ChessBoard::RestoreMove(int x, int y, int color) {
+	if (CheckInside(x, y) && GetColor(x, y) == color) {
+		chessBoard[x][y] = nullChess;
+		return true;
+	}
+	return false;
+}
+bool chessboard::ChessBoard::RestoreMove(std::pair<int, int> pos, int color) {
+	int x = pos.first, y = pos.second;
 	if (CheckInside(x, y) && GetColor(x, y) == color) {
 		chessBoard[x][y] = nullChess;
 		return true;

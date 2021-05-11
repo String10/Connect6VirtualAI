@@ -1,5 +1,6 @@
 #pragma once
 #include <iostream>
+#include <utility>
 
 namespace chessboard {
 
@@ -19,7 +20,9 @@ namespace chessboard {
 		bool CheckInside(int x, int y) const;
 		int GetColor(int x, int y) const;
 		bool TakeMove(int x, int y, int color);
+		bool TakeMove(std::pair<int, int> pos, int color);
 		bool RestoreMove(int x, int y, int color);
+		bool RestoreMove(std::pair<int, int> pos, int color);
 		void Display(std::ostream& out) const;
 	};
 
