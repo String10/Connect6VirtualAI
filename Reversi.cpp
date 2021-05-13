@@ -295,6 +295,8 @@ void Reversi::generateOneStepMessage(int row1, int col1, int row2, int col2)
 * handleMessage: handle the message from server.
 */
 
+const int LEN = 6;
+
 static int to[8][2] = {
 	{0, 1},
 	{1, 1},
@@ -392,16 +394,118 @@ bool Reversi::CertainStep(int &r1, int &c1, int &r2, int &c2) {
 	return false;
 }
 
+void Reversi::CheckCertainStep(int& r1, int& c1, int& r2, int& c2) {
+	auto abs = [](int k)->int {
+		return k > 0 ? k : -k;
+	};
+	auto getPoint = [&](int _color)->int {
+		if (_color == ownColor + 1) {
+			return 1;
+		}
+		if (_color == (!ownColor) + 1) {
+			return 7;
+		}
+		return 0;
+	};
+
+	int h1, h2, w1, w2;
+	h1 = h2 = w1 = w2 = -1;
+	for (int x = 0; x < chessboard::BOARD_HEIGHT; x++) {
+		for (int y = 0; y < chessboard::BOARD_WIDTH; y++) {
+			if (board.GetColor(x, y) == chessboard::whiteChess ||
+				board.GetColor(x, y) == chessboard::blackChess) {
+				h2 = x;
+				if (h1 == -1) {
+					h1 = x;
+				}
+				break;
+			}
+		}
+	}
+	for (int y = 0; y < chessboard::BOARD_WIDTH; y++) {
+		for (int x = 0; x < chessboard::BOARD_HEIGHT; x++) {
+			if (board.GetColor(x, y) == chessboard::whiteChess ||
+				board.GetColor(x, y) == chessboard::blackChess) {
+				w2 = y;
+				if (w1 == -1) {
+					w1 = y;
+				}
+				break;
+			}
+		}
+	}
+
+	bool isSecond = false;
+	for (int x = h1; x <= h2; x++) {
+		for (int y = w1; y <= w2; y++) {
+			for (int k = 0; k < 8; k++) {
+				int _r1, _c1, _r2, _c2;
+				_r1 = _r2 = x, _c1 = _c2 = y;
+				for (int i = 0; i < LEN; i++) {
+					if (board.CheckInside(x + to[k][0] * i, y + to[k][1] * i)) {
+						_r2 = x + to[k][0] * i, _c2 = y + to[k][1] * i;
+					}
+					else {
+						break;
+					}
+				}
+				int sum = 0;
+				for (int u = _r1, v = _c1; ; u += to[k][0], v += to[k][1]) {
+					sum += getPoint(board.GetColor(u, v));
+					if (u == _r2 && v == _c2) {
+						if (sum == 35 || sum == 5) {
+							for (int _u = _r1, _v = _c1; ; _u += to[k][0], _v += to[k][1]) {
+								if (board.GetColor(_u, _v) == 0 && !(r2 == _u && c2 == _v) && !isSecond) {
+									r1 = _u, c1 = _v;
+									isSecond = true;
+								}
+								if (board.GetColor(_u, _v) == 0 && !(r1 == _u && c1 == _v) && isSecond) {
+									r2 = _u, c2 = _v;
+									return;
+								}
+								if (_u == _r2 && _v == _c2) {
+									break;
+								}
+							}
+						}
+						if (sum == 28 || sum == 4) {
+							for (int _u = _r1, _v = _c1; ; _u += to[k][0], _v += to[k][1]) {
+								if (board.GetColor(_u, _v) == 0) {
+									if (isSecond) {
+										r2 = _u, c2 = _v;
+										return;
+									}
+									else {
+										r1 = _u, c1 = _v;
+										isSecond = true;
+										if (!(_u == _r1 && _v == _c1) || !(_u == _r2 && _v == _c1)) {
+											break;
+										}
+									}
+								}
+								if (_u == _r2 && _v == _c2) {
+									break;
+								}
+							}
+						}
+						break;
+					}
+				}
+			}
+		}
+	}
+}
+
 #include <set>
+#include <cmath>
 #include <vector>
 #include <utility>
 #include <algorithm>
 
-const int LEN = 6;
-const int SEARCH_DEPTH = 3;
+const int SEARCH_DEPTH = 2;
 const int SEARCH_WIDTH = 4;
 
-void Reversi::MakeOptionVec(vector <pair <pair <int, int>, int> >& options) {
+void Reversi::MakeOptionVec(vector <pair <Position, int> >& options, int color) {
 	set < pair <int, int> > alternative;
 	for (int i = 0; i < chessboard::BOARD_HEIGHT; i++) {
 		for (int j = 0; j < chessboard::BOARD_WIDTH; j++) {
@@ -418,18 +522,97 @@ void Reversi::MakeOptionVec(vector <pair <pair <int, int>, int> >& options) {
 	}
 
 	for (auto pos : alternative) {
-		options.push_back(make_pair(pos, CalcHeuristicValue(pos)));
+		options.push_back(make_pair(pos, CalcHeuristicValue(pos, color)));
 	}
 
-	sort(options.begin(), options.end(),
-		[](pair <pair <int, int>, int> a, pair <pair <int, int>, int> b)->bool {
-			return a.second > b.second;
-		});
+	if (color == ownColor) {
+		sort(options.begin(), options.end(),
+			[](pair <Position, int> a, pair <Position, int> b)->bool {
+				return a.second > b.second;
+			});
+	}
+	else {
+		sort(options.begin(), options.end(),
+			[](pair <Position, int> a, pair <Position, int> b)->bool {
+				return a.second < b.second;
+			});
+	}
 }
-int Reversi::CalcHeuristicValue(pair<int, int> pos) {
+void Reversi::MakeOption2Vec(vector <pair <pair <Position, Position>, int> >& options2, int color) {
+	int w = sqrt(SEARCH_WIDTH);
+	vector <pair <Position, int> > optionsFirstStep;
+	MakeOptionVec(optionsFirstStep, color);
+
+	for (int i = 0; i < w; i++) {
+		vector <pair <Position, int> > optionsSecondStep;
+
+		board.TakeMove(optionsFirstStep[i].first, color + 1);
+		MakeOptionVec(optionsSecondStep, color);
+		board.RestoreMove(optionsFirstStep[i].first, color + 1);
+
+		for (int j = 0; j < w; j++) {
+			options2.push_back(make_pair(make_pair(optionsFirstStep[i].first, optionsSecondStep[j].first), optionsFirstStep[i].second + optionsSecondStep[j].second));
+		}
+	}
+}
+int Reversi::CalcHeuristicValue(Position pos, int color) {
 	int x = pos.first, y = pos.second;
 
 	int preValue = 0, movValue = 0;
+
+	auto abs = [](int k)->int {
+		return k > 0 ? k : -k;
+	};
+	auto getPoint = [&](int _color)->int {
+		if (_color == color + 1) {
+			return 1;
+		}
+		if (_color == (!color) + 1) {
+			return 7;
+		}
+		return 0;
+	};
+	auto calc = [](int k)->int {
+		if (k / 7 == 0) {
+			switch (k)
+			{
+			case 6:
+				return 1e6;
+			case 5:
+				return 200;
+			case 4:
+				return 200;
+			case 3:
+				return 40;
+			case 2:
+				return 20;
+			case 1:
+				return 1;
+			default:
+				break;
+			}
+		}
+		else if (k % 7 == 0) {
+			switch (k / 7)
+			{
+			case 6:
+				return -1e6;
+			case 5:
+				return -6000;
+			case 4:
+				return -6000;
+			case 3:
+				return -45;
+			case 2:
+				return -20;
+			case 1:
+				return -1;
+			default:
+				break;
+			}
+		}
+		return 0;
+	};
 
 	for (int k = 0; k < 4; k++) {
 		int r1, c1, r2, c2;
@@ -451,64 +634,9 @@ int Reversi::CalcHeuristicValue(pair<int, int> pos) {
 			}
 		}
 
-		auto getPoint = [&](int color)->int {
-			if (color == ownColor + 1) {
-				return 1;
-			}
-			if(color == (!ownColor) + 1) {
-				return 7;
-			}
-			return 0;
-		};
-
 		int sum = 0;
 
-		auto calc = [](int k)->int {
-			if (k / 7 == 0) {
-				switch (k)
-				{
-				case 6:
-					return 1e6;
-				case 5:
-					return 200;
-				case 4:
-					return 200;
-				case 3:
-					return 40;
-				case 2:
-					return 20;
-				case 1:
-					return 1;
-				default:
-					break;
-				}
-			}
-			else if(k % 7 == 0) {
-				switch (k)
-				{
-				case 6:
-					return -1e6;
-				case 5:
-					return -6000;
-				case 4:
-					return -6000;
-				case 3:
-					return -50;
-				case 2:
-					return -25;
-				case 1:
-					return -1;
-				default:
-					break;
-				}
-			}
-			return 0;
-		};
-		auto abs = [](int k)->int {
-			return k > 0 ? k : -k;
-		};
-
-		board.TakeMove(x, y, ownColor + 1);
+		board.TakeMove(x, y, color + 1);
 		for (int u = r1, v = c1; u <= r2 && v <= c2; u += to[k][0], v += to[k][1]) {
 			sum += getPoint(board.GetColor(u, v));
 			if (abs(u - r1) + 1 == LEN || abs(v - c1) + 1 == LEN) {
@@ -520,7 +648,7 @@ int Reversi::CalcHeuristicValue(pair<int, int> pos) {
 			}
 		}
 
-		board.RestoreMove(x, y, ownColor + 1);
+		board.RestoreMove(x, y, color + 1);
 		for (int u = r1, v = c1; u <= r2 && v <= c2; u += to[k][0], v += to[k][1]) {
 			sum += getPoint(board.GetColor(u, v));
 			if (abs(u - r1) + 1 == LEN || abs(v - c1) + 1 == LEN) {
@@ -535,12 +663,24 @@ int Reversi::CalcHeuristicValue(pair<int, int> pos) {
 
 	return movValue - preValue;
 }
-int Reversi::Minimax(pair<int, int> pos, int depth, int alpha, int beta) {
+int Reversi::CalcHeuristicValue2(pair <Position, Position> pos2, int color) {
+	int value = CalcHeuristicValue(pos2.first, color);
+
+	board.TakeMove(pos2.first, color + 1);
+	value += CalcHeuristicValue(pos2.second, color);
+	board.RestoreMove(pos2.first, color + 1);
+
+	return value;
+}
+int Reversi::Minimax(pair <Position, Position> pos2, int depth, int alpha, int beta) {
+	int color = ((SEARCH_DEPTH - depth) % 2) ^ ownColor;
+
 	if (depth == 0) {
-		return CalcHeuristicValue(pos);
+		return CalcHeuristicValue2(pos2, color);
 	}
-	vector <pair <pair <int, int>, int> > options;
-	MakeOptionVec(options);
+
+	vector <pair <pair <Position, Position>, int> > options2;
+	MakeOption2Vec(options2, color);
 
 	auto min = [](int a, int b)->int {
 		return a < b ? a : b;
@@ -552,11 +692,13 @@ int Reversi::Minimax(pair<int, int> pos, int depth, int alpha, int beta) {
 	if ((SEARCH_DEPTH - depth) % 2) {
 		// Opposite
 		for (int i = 0; i < SEARCH_WIDTH; i++) {
-			board.TakeMove(options[i].first, (!ownColor) + 1);
+			board.TakeMove(options2[i].first.first, (!ownColor) + 1);
+			board.TakeMove(options2[i].first.second, (!ownColor) + 1);
 			
-			beta = min(beta, Minimax(options[i].first, depth - 1, alpha, beta));
+			beta = min(beta, Minimax(options2[i].first, depth - 1, alpha, beta));
 
-			board.RestoreMove(options[i].first, (!ownColor) + 1);
+			board.RestoreMove(options2[i].first.first, (!ownColor) + 1);
+			board.RestoreMove(options2[i].first.second, (!ownColor) + 1);
 
 			if (beta <= alpha) {
 				break;
@@ -567,11 +709,13 @@ int Reversi::Minimax(pair<int, int> pos, int depth, int alpha, int beta) {
 	else {
 		// We
 		for (int i = 0; i < SEARCH_WIDTH; i++) {
-			board.TakeMove(options[i].first, ownColor + 1);
+			board.TakeMove(options2[i].first.first, ownColor + 1);
+			board.TakeMove(options2[i].first.second, ownColor + 1);
 
-			alpha = max(alpha, Minimax(options[i].first, depth - 1, alpha, beta));
+			alpha = max(alpha, Minimax(options2[i].first, depth - 1, alpha, beta));
 
-			board.RestoreMove(options[i].first, ownColor + 1);
+			board.RestoreMove(options2[i].first.first, ownColor + 1);
+			board.RestoreMove(options2[i].first.second, ownColor + 1);
 
 			if (beta <= alpha) {
 				break;
@@ -581,20 +725,21 @@ int Reversi::Minimax(pair<int, int> pos, int depth, int alpha, int beta) {
 	}
 }
 void Reversi::SearchForStep(int& r1, int& c1, int& r2, int& c2) {
-	vector <pair <pair <int, int>, int> > options;
-	MakeOptionVec(options);
+	vector <pair <pair <Position, Position>, int> > options2;
+
+	MakeOption2Vec(options2, ownColor);
 
 	for (int i = 0; i < SEARCH_WIDTH; i++) {
-		options[i].second = Minimax(options[i].first, SEARCH_DEPTH, INT_MIN, INT_MAX);
+		options2[i].second = Minimax(options2[i].first, SEARCH_DEPTH, INT_MIN, INT_MAX);
 	}
 
 	int maxValue = INT_MIN;
 	for (int i = 0; i < SEARCH_WIDTH; i++) {
-		if (options[i].second > maxValue) {
-			r2 = r1, c2 = c1;
-			r1 = options[i].first.first, c1 = options[i].first.second;
+		if (options2[i].second > maxValue) {
+			r1 = options2[i].first.first.first, c1 = options2[i].first.first.second;
+			r2 = options2[i].first.second.first, c2 = options2[i].first.second.second;
 
-			maxValue = options[i].second;
+			maxValue = options2[i].second;
 		}
 	}
 }
@@ -629,11 +774,13 @@ pair<pair<int, int>, pair<int, int>> Reversi::step()
 		return make_pair(step1, step2);
 	};
 
-	if (CertainStep(r1, c1, r2, c2)) {
+	/*if (CertainStep(r1, c1, r2, c2)) {
 		return make_ans();
-	}
+	}*/
 
-	// SearchForStep(r1, c1, r2, c2);
+	SearchForStep(r1, c1, r2, c2);
+
+	CheckCertainStep(r1, c1, r2, c2);
 
 	return make_ans();
 

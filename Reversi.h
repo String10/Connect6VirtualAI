@@ -8,6 +8,8 @@
 #include <vector>
 #include <utility>
 
+#define Position pair <int, int>
+
 using namespace std;
 
 class Reversi{
@@ -25,10 +27,13 @@ private:
     void generateOneStepMessage(int row1 , int col1, int row2, int col2);
 
     bool CertainStep(int& r1, int& c1, int& r2, int& c2);
+    void CheckCertainStep(int& r1, int& c1, int& r2, int& c2);
 
-    void MakeOptionVec(vector <pair <pair <int, int>, int> >& options);
-    int CalcHeuristicValue(pair <int, int> pos);
-    int Minimax(pair <int, int> pos, int depth, int alpha, int beta);
+    void MakeOptionVec(vector <pair <Position, int> >& options, int color);
+    void MakeOption2Vec(vector <pair <pair <Position, Position>, int> >& options2, int color);
+    int CalcHeuristicValue(Position pos, int color);
+    int CalcHeuristicValue2(pair <Position, Position> pos2, int color);
+    int Minimax(pair <Position, Position> pos2, int depth, int alpha, int beta);
     void SearchForStep(int& r1, int& c1, int& r2, int& c2);
 
 public:
