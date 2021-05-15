@@ -453,7 +453,7 @@ void Reversi::CheckCertainStep(int& r1, int& c1, int& r2, int& c2) {
 				for (int u = _r1, v = _c1; ; u += to[k][0], v += to[k][1]) {
 					sum += getPoint(board.GetColor(u, v));
 					if (u == _r2 && v == _c2) {
-						if (sum == 35 || sum == 5) {
+						if (sum == 5) {
 							for (int _u = _r1, _v = _c1; ; _u += to[k][0], _v += to[k][1]) {
 								if (board.GetColor(_u, _v) == 0 && !(r2 == _u && c2 == _v) && !isSecond) {
 									r1 = _u, c1 = _v;
@@ -468,14 +468,49 @@ void Reversi::CheckCertainStep(int& r1, int& c1, int& r2, int& c2) {
 								}
 							}
 						}
-						if (sum == 28 || sum == 4) {
+						if (sum == 4) {
 							for (int _u = _r1, _v = _c1; ; _u += to[k][0], _v += to[k][1]) {
 								if (board.GetColor(_u, _v) == 0) {
-									if (isSecond) {
+									if (isSecond && !(r1 == _u && c1 == _v)) {
 										r2 = _u, c2 = _v;
 										return;
 									}
-									else {
+									if (!isSecond && !(r2 == _u && c2 == _v)) {
+										r1 = _u, c1 = _v;
+										isSecond = true;
+										if (!(_u == _r1 && _v == _c1) || !(_u == _r2 && _v == _c1)) {
+											break;
+										}
+									}
+								}
+								if (_u == _r2 && _v == _c2) {
+									break;
+								}
+							}
+						}
+						if (sum == 35) {
+							for (int _u = _r1, _v = _c1; ; _u += to[k][0], _v += to[k][1]) {
+								if (board.GetColor(_u, _v) == 0 && !(r2 == _u && c2 == _v) && !isSecond) {
+									r1 = _u, c1 = _v;
+									isSecond = true;
+								}
+								if (board.GetColor(_u, _v) == 0 && !(r1 == _u && c1 == _v) && isSecond) {
+									r2 = _u, c2 = _v;
+									return;
+								}
+								if (_u == _r2 && _v == _c2) {
+									break;
+								}
+							}
+						}
+						if (sum == 28) {
+							for (int _u = _r1, _v = _c1; ; _u += to[k][0], _v += to[k][1]) {
+								if (board.GetColor(_u, _v) == 0) {
+									if (isSecond && !(r1 == _u && c1 == _v)) {
+										r2 = _u, c2 = _v;
+										return;
+									}
+									if (!isSecond && !(r2 == _u && c2 == _v)) {
 										r1 = _u, c1 = _v;
 										isSecond = true;
 										if (!(_u == _r1 && _v == _c1) || !(_u == _r2 && _v == _c1)) {
@@ -774,13 +809,13 @@ pair<pair<int, int>, pair<int, int>> Reversi::step()
 		return make_pair(step1, step2);
 	};
 
-	/*if (CertainStep(r1, c1, r2, c2)) {
+	if (CertainStep(r1, c1, r2, c2)) {
 		return make_ans();
-	}*/
+	}
 
-	SearchForStep(r1, c1, r2, c2);
+	// SearchForStep(r1, c1, r2, c2);
 
-	CheckCertainStep(r1, c1, r2, c2);
+	// CheckCertainStep(r1, c1, r2, c2);
 
 	return make_ans();
 
